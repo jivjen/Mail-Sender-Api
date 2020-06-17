@@ -6,28 +6,44 @@ from email.message import Message
 from flask_cors import CORS
 
 
+
 app = Flask(__name__)
+
+# Enables CORS requests for the service
 CORS(app)
+
+# This is the basic index route which can probably be used to check
+# if the service is up and running once it is deployed but this is
+# not called by the client at any point
 @app.route('/')
 def index():
-    return "HELLLLLL"
+    return "WORKING"
 
+
+# This is the method that handles the sendMail() function and expects 
+# a JSON input in the POST request that is made by the client
+# Fields required mentioned in the reference document
 @app.route('/sendMailOTP', methods=['POST'])
 def sendMail():
+    # Initializing SMTP 
     s = smtplib.SMTP('smtp.gmail.com', 587)
 
     # start TLS for security
     s.starttls()
 
-    s.login("jival.jenson@btech.christuniversity.in", "20259857")
-    # otp = request.args.get('otp')
-    # email = request.args.get('email')
-    # otp = request.form['otp']
-    # email = request.form['email']
+    # Mail ID and credential from where all the mails will be sent are to be given here
+    # USE CHRIST ID!!! Personal mails have restrictions on the number of mails that can be sent
+    s.login("Your Mail ID Ex- jival.jenson@btech.christuniversity.in", "Your Password")
+
+    # The content variable will hold the JSON request body
     content = request.get_json()
     
+    # Access the otp field that is within the JSON request
     otp = content['otp']
+    # Access the email field that is within the JSON request
     email = content['email']
+
+    # Email content definition
     email_cont = """
         <html>
           <head>  
@@ -40,37 +56,55 @@ def sendMail():
         </html>
         """
 
+    # Construction of the message to be sent
     msg = Message()
     msg['Subject'] = "Open Elective OTP"
     msg['From'] = 'CHRIST (Deemed to be University)'
     msg['To'] = 'You'
     msg.add_header('Content-Type', 'text/html')
     msg.set_payload(email_cont)
-    # sending the mail
-    s.sendmail("jival.jenson@btech.christuniversity.in", email, msg.as_string())
-
+    
+    # Sending the Mail
+    # The mail ID specified above to be given here again
+    s.sendmail("Your Mail ID Ex- jival.jenson@btech.christuniversity.in", email, msg.as_string())
+    
+    # Close SMTP session
     s.quit()
+    
+    # Sends a success response
     resp = jsonify(success=True)
     return resp
 
+
+# This is the method that is used to send the confirmation mail with the selected preferences
+# Expects a JSON request from the client as a POST request
+# Fields required mentioned in the reference document
 @app.route('/sendMailConfirmation', methods=['POST'])
 def sendConfirmMail():
+    # Initializing SMTP 
     s = smtplib.SMTP('smtp.gmail.com', 587)
  
-    # start TLS for security
+    # Start TLS for security
     s.starttls()
 
-    s.login("jival.jenson@btech.christuniversity.in", "20259857")
+    # Mail ID and credential from where all the mails will be sent are to be given here
+    # USE CHRIST ID!!! Personal mails have restrictions on the number of mails that can be sent
+    s.login("Your Mail ID Ex- jival.jenson@btech.christuniversity.in", "Your Password")
+    
+    # The content variable will hold the JSON request body
     content = request.get_json()
-    # email = request.args.get('email')
-    # first_pref = request.args.get('first')
-    # second_pref = request.args.get('second')
-    # third_pref = request.args.get('third')
+
+    # Access the email field that is within the JSON request
     email = content['email']
+    # Access the first_pref field that is within the JSON request (Subject code)
     first_pref = content['first']
+    # Access the second_pref field that is within the JSON request (Subject code)
     second_pref = content['second']
+    # Access the third_pref field that is within the JSON request (Subject code)
     third_pref = content['third']
 
+    # Dictionary to lookup the name of the subject of the given subject code
+    # Change according to the respective year's available subjects
     dictionary = {
     "CE636OE1" : "Solid Waste Management",
     "CE636OE2" : "Environmental Impact Assessment",
@@ -96,9 +130,12 @@ def sendConfirmMail():
 
     }
 
+    # Getting the names of the subjects from the dictionary
     ffirst = dictionary[first_pref]
     ssecond = dictionary[second_pref]
     tthird = dictionary[third_pref]
+    
+    # Mail content
     email_cont = """
             <html>
   <head>  
@@ -116,17 +153,28 @@ def sendConfirmMail():
 </html>
         """
 
+    # Construction of the message 
     msg = Message()
     msg['Subject'] = "Open Elective Confirmation"
     msg['From'] = 'CHRIST (Deemed to be University)'
     msg['To'] = 'You'
     msg.add_header('Content-Type', 'text/html')
     msg.set_payload(email_cont)
-    # sending the mail
-    s.sendmail("jival.jenson@btech.christuniversity.in", email, msg.as_string())
+    
+    # Sending the mail
+    # The mail ID specified above to be given here again
+    s.sendmail("Your Mail ID Ex- jival.jenson@btech.christuniversity.in", email, msg.as_string())
+    
+    # Close SMTP session
     s.quit()
+
+    #Sending Success Response
     resp = jsonify(success=True)
     return resp
+
+
 if __name__ == '__main__':
+
+    # Hosting the app
     app.run(host='0.0.0.0', debug=True, use_reloader=False)
 
